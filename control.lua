@@ -90,7 +90,9 @@ local function handle_craft_action(player, multiplier)
   local item_count = player.get_item_count({name = item_name, quality = quality})
   if item_count > 0 then
     player.clean_cursor()
-    player.cursor_stack.set_stack({name = item_name, count = item_count})
+    if player.cursor_stack then
+      player.cursor_stack.set_stack({name = item_name, count = item_count})
+    end
     return
   end
 
