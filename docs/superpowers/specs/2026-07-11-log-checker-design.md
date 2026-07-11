@@ -37,17 +37,19 @@ GhostCrafter/
 
 ### Logic
 
-1. Resolve log path: `$env:APPDATA\Factorio\factorio-current.log`
-2. If file does not exist → print clear message with path and exit
-3. Read all lines
-4. Extract Factorio version from line 0 (always present, useful for context)
-5. Find all lines matching `^\s*[\d\.]+\s+Error` — Factorio's standard error format
-6. **No errors found:** print "Log looks clean", show last 10 lines in case of non-standard failure
-7. **Errors found:**
-   - Print header: log path, Factorio version, total error count
-   - Take last error index, extract `[index-5 .. index+60]` for context window (captures full Lua stack trace)
-   - For each line in the window: if it contains "GhostCrafter", prefix with `> MOD:` to highlight
-   - Print the annotated block
+1. **Resolve log path:** Check standard path (`$env:APPDATA\Factorio\factorio-current.log`). If missing, check fallback locations (e.g. workspace parent/sibling folders for a local portable install).
+2. **Verify existence:** If file does not exist, print a clear message with path and exit.
+3. **Read log efficiently:** 
+   - Extract Factorio version from line 0 (read only 1 line using `-TotalCount 1`).
+   - Read the last 1000 lines (using `-Tail 1000`) for error analysis to avoid performance issues on large files.
+4. **Identify errors:** Search the trailing lines for standard Factorio errors matching the regex `^\s*[\d\.]+\s+Error`.
+5. **No errors found:** Print "Log looks clean", and show the last 15 lines of the log in case of non-standard/unrecognized failures.
+6. **Errors found:**
+   - Print header: Log file path, last modified time (to verify log recency), Factorio version, and total error count.
+   - Select the last error line's index in the trailing lines array.
+   - Extract the context window around it using bounded bounds to prevent negative indexing or out-of-bounds slicing: `[Math]::Max(0, index - 5)` to `[Math]::Min(lines.count - 1, index + 60)`.
+   - **Annotate/Highlight:** For each line in the context window, if it contains the mod name `"GhostCrafter"` or matches the standard `Error` pattern, prefix it with `> MOD:` or `> ERR:` respectively to highlight the issue.
+   - Print the annotated block.
 
 ### Output format example
 
@@ -69,9 +71,12 @@ Errors:  3 total — showing last
 
 ## Component 2: `.claude/commands/check-log.md`
 
-Claude Code loads this file when `/check-log` is typed. Content:
+Claude Code loads this file when `/check-log` is typed. It includes YAML frontmatter to register command details for `/help`. Content:
 
 ```markdown
+---
+description: Read the Factorio error log, identify what broke in GhostCrafter, and automatically fix the issue.
+---
 Run `powershell -ExecutionPolicy Bypass -File tools/check-log.ps1` and read the output.
 
 If errors are found: identify the file and line in GhostCrafter, read that file, fix the error, and explain what went wrong.
@@ -97,3 +102,11 @@ If the log looks clean: say so and suggest checking if the mod is actually enabl
 - Watching the log in real-time (file watcher)
 - Auto-fixing without being asked
 - Parsing errors from other mods
+
+---
+
+## Suggested Improvements
+
+1. **Portable/Local Installation Fallback Detection:** If the log file is not found in the standard AppData folder (e.g. because the developer uses a portable zip installation), check sibling/parent directories of the workspace.
+2. **Multi-Source Error and Exception Highlighting:** Extend the highlight tags so that the main `Error` line itself is highlighted (with `> ERR:`) in addition to mod-specific stack traces (with `> MOD:`). This makes the entry point of the traceback immediately clear.
+3. **Stale Log & Lock Verification:** Display the log's last write time and warn if the log is stale (e.g. older than 10 minutes) or if Factorio is currently running, which might indicate the log file is partially locked or hasn't been written to disk yet.
