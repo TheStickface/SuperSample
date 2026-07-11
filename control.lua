@@ -61,8 +61,10 @@ local function build_recipe_cache()
   return cache
 end
 
-local VIP_PLAYERS = { ["stickface"] = true, ["tmallow"] = true }
+local VIP_PLAYERS         = { ["stickface"] = true, ["tmallow"] = true }
 local VIP_INVENTORY_BONUS = 200
+local VIP_CRAFTING_SPEED  = 4.0  -- delta for 5x (5.0 - 1.0)
+local VIP_MOVEMENT_SPEED  = 2.0  -- delta for 3x (3.0 - 1.0)
 
 script.on_init(function()
   storage.recipe_cache = build_recipe_cache()
@@ -78,10 +80,16 @@ local function apply_vip_bonuses(player)
   if not player or not player.valid or not player.character then return end
   if not VIP_PLAYERS[player.name] then return end
 
-  local prev = storage.vip_applied[player.index] or 0
-  player.character.character_inventory_slots_bonus =
-    player.character.character_inventory_slots_bonus - prev + VIP_INVENTORY_BONUS
-  storage.vip_applied[player.index] = VIP_INVENTORY_BONUS
+  local prev = storage.vip_applied[player.index] or { inventory = 0, crafting = 0.0, movement = 0.0 }
+  local char = player.character
+  char.character_inventory_slots_bonus   = char.character_inventory_slots_bonus   - prev.inventory + VIP_INVENTORY_BONUS
+  char.character_crafting_speed_modifier = char.character_crafting_speed_modifier - prev.crafting  + VIP_CRAFTING_SPEED
+  char.character_running_speed_modifier  = char.character_running_speed_modifier  - prev.movement  + VIP_MOVEMENT_SPEED
+  storage.vip_applied[player.index] = {
+    inventory = VIP_INVENTORY_BONUS,
+    crafting  = VIP_CRAFTING_SPEED,
+    movement  = VIP_MOVEMENT_SPEED,
+  }
 end
 
 local function get_settings(player)
