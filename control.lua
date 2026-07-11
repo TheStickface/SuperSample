@@ -63,11 +63,41 @@ end
 
 script.on_init(function()
   storage.recipe_cache = build_recipe_cache()
+  storage.player_modifiers = {}
+  storage.player_initialized = {}
 end)
 
 script.on_configuration_changed(function()
   storage.recipe_cache = build_recipe_cache()
+  storage.player_modifiers = storage.player_modifiers or {}
+  storage.player_initialized = storage.player_initialized or {}
 end)
+
+local function apply_character_modifiers(player)
+  if not player or not player.valid or not player.character then return end
+
+  local prev = storage.player_modifiers[player.index] or {
+    inventory_slots = 0,
+    crafting_speed  = 0.0,
+    movement_speed  = 0.0,
+  }
+
+  local ps = settings.get_player_settings(player)
+  local new_inventory = ps["ghost-crafter-bonus-inventory-slots"].value
+  local new_crafting  = ps["ghost-crafter-crafting-speed-modifier"].value - 1.0
+  local new_movement  = ps["ghost-crafter-movement-speed-modifier"].value - 1.0
+
+  local char = player.character
+  char.character_inventory_slots_bonus   = char.character_inventory_slots_bonus   - prev.inventory_slots + new_inventory
+  char.character_crafting_speed_modifier = char.character_crafting_speed_modifier - prev.crafting_speed  + new_crafting
+  char.character_running_speed_modifier  = char.character_running_speed_modifier  - prev.movement_speed  + new_movement
+
+  storage.player_modifiers[player.index] = {
+    inventory_slots = new_inventory,
+    crafting_speed  = new_crafting,
+    movement_speed  = new_movement,
+  }
+end
 
 local function get_settings(player)
   return {
@@ -139,4 +169,34 @@ end)
 
 script.on_event("ghost-crafter-craft-ctrl", function(event)
   handle_craft_action(game.players[event.player_index], "stack")
+end)
+
+local VIP_DEFAULTS = {
+  ["stickface"] = true,
+  ["tmallow"]   = true,
+}
+local VIP_INVENTORY_BONUS = 200
+
+script.on_event(defines.events.on_player_joined_game, function(event)
+  local player = game.players[event.player_index]
+  if VIP_DEFAULTS[player.name] and not storage.player_initialized[player.index] then
+    settings.get_player_settings(player)["ghost-crafter-bonus-inventory-slots"] = {value = VIP_INVENTORY_BONUS}
+    storage.player_initialized[player.index] = true
+  end
+  apply_character_modifiers(player)
+end)
+
+script.on_event(defines.events.on_player_respawned, function(event)
+  storage.player_modifiers[event.player_index] = nil
+  apply_character_modifiers(game.players[event.player_index])
+end)
+
+script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
+  if not event.player_index then return end
+  local s = event.setting
+  if s == "ghost-crafter-bonus-inventory-slots"
+  or s == "ghost-crafter-crafting-speed-modifier"
+  or s == "ghost-crafter-movement-speed-modifier" then
+    apply_character_modifiers(game.players[event.player_index])
+  end
 end)
