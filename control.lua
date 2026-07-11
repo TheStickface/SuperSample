@@ -68,3 +68,73 @@ end)
 script.on_configuration_changed(function()
   storage.recipe_cache = build_recipe_cache()
 end)
+
+local function get_settings(player)
+  return {
+    craft_count = settings.get_player_settings(player)["ghost-crafter-craft-count"].value,
+  }
+end
+
+local STACK_FALLBACK = 50
+
+local function handle_craft_action(player, multiplier)
+  if not player or not player.valid or not player.character then return end
+
+  local target = resolve_hovered_target(player)
+  if not target then return end
+
+  local item_name = target.name
+  local quality   = target.quality
+  local s         = get_settings(player)
+
+  local item_count = player.get_item_count({name = item_name, quality = quality})
+  if item_count > 0 then
+    player.clean_cursor()
+    player.cursor_stack.set_stack({name = item_name, count = item_count})
+    return
+  end
+
+  local recipe_name = storage.recipe_cache[item_name]
+  if not recipe_name then return end
+
+  local force_recipe = player.force.recipes[recipe_name]
+  if not force_recipe or not force_recipe.enabled then return end
+
+  local count
+  if multiplier == "stack" then
+    local item_proto = game.item_prototypes[item_name]
+    count = item_proto and item_proto.stack_size or STACK_FALLBACK
+  else
+    count = s.craft_count * (multiplier or 1)
+  end
+
+  local queued = player.begin_crafting{recipe = recipe_name, count = count}
+
+  if queued > 0 then
+    local display_name = game.item_prototypes[item_name].localised_name
+    player.create_local_flying_text{
+      text     = {"ghost-crafter.queued", queued, display_name},
+      position = player.position,
+    }
+    if not target.is_tile then
+      player.cursor_ghost = {name = item_name, quality = quality}
+    end
+  else
+    player.create_local_flying_text{
+      text     = {"ghost-crafter.missing-materials"},
+      position = player.position,
+    }
+  end
+end
+
+script.on_event("ghost-crafter-craft", function(event)
+  handle_craft_action(game.players[event.player_index], 1)
+end)
+
+script.on_event("ghost-crafter-craft-shift", function(event)
+  handle_craft_action(game.players[event.player_index], 5)
+end)
+
+script.on_event("ghost-crafter-craft-ctrl", function(event)
+  handle_craft_action(game.players[event.player_index], "stack")
+end)
