@@ -1,6 +1,6 @@
 {
   "name": "GhostCrafter",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "title": "GhostCrafter",
   "author": "scorps",
   "description": "A keybind that acts as a smart pipette: picks up items you have, or queues a craft for items you don't.",
