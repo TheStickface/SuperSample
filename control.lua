@@ -103,6 +103,11 @@ script.on_event(defines.events.on_lua_shortcut, function(event)
   player.set_shortcut_toggled(SHORTCUT_NAME, not player.is_shortcut_toggled(SHORTCUT_NAME))
 end)
 
+script.on_event(SHORTCUT_NAME, function(event)
+  local player = game.players[event.player_index]
+  player.set_shortcut_toggled(SHORTCUT_NAME, not player.is_shortcut_toggled(SHORTCUT_NAME))
+end)
+
 local function get_settings(player)
   return {
     craft_count = settings.get_player_settings(player)["supersample-craft-count"].value,
@@ -152,7 +157,7 @@ local function handle_craft_action(player, multiplier)
       text     = {"supersample.queued", queued, display_name},
       position = player.position,
     }
-    if not target.is_tile then
+    if not target.is_tile and player.is_shortcut_toggled(SHORTCUT_NAME) then
       player.cursor_ghost = {name = item_name, quality = quality}
     end
   else
