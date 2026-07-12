@@ -1,3 +1,5 @@
+local SHORTCUT_NAME = "supersample-toggle-pipette"
+
 local function resolve_hovered_target(player)
   local entity = player.selected
   if not entity or not entity.valid then return nil end
@@ -61,12 +63,44 @@ local function build_recipe_cache()
   return cache
 end
 
+local function ensure_pipette_default(player)
+  storage.pipette_initialized = storage.pipette_initialized or {}
+  if storage.pipette_initialized[player.index] then return end
+  player.set_shortcut_toggled(SHORTCUT_NAME, true)
+  storage.pipette_initialized[player.index] = true
+end
+
 script.on_init(function()
   storage.recipe_cache = build_recipe_cache()
+  for _, player in pairs(game.players) do
+    ensure_pipette_default(player)
+  end
 end)
 
 script.on_configuration_changed(function()
   storage.recipe_cache = build_recipe_cache()
+  for _, player in pairs(game.players) do
+    ensure_pipette_default(player)
+  end
+end)
+
+script.on_event(defines.events.on_player_created, function(event)
+  local player = game.players[event.player_index]
+  player.set_shortcut_toggled(SHORTCUT_NAME, true)
+  storage.pipette_initialized = storage.pipette_initialized or {}
+  storage.pipette_initialized[player.index] = true
+end)
+
+script.on_event(defines.events.on_player_removed, function(event)
+  if storage.pipette_initialized then
+    storage.pipette_initialized[event.player_index] = nil
+  end
+end)
+
+script.on_event(defines.events.on_lua_shortcut, function(event)
+  if event.prototype_name ~= SHORTCUT_NAME then return end
+  local player = game.players[event.player_index]
+  player.set_shortcut_toggled(SHORTCUT_NAME, not player.is_shortcut_toggled(SHORTCUT_NAME))
 end)
 
 local function get_settings(player)
@@ -88,7 +122,7 @@ local function handle_craft_action(player, multiplier)
   local s         = get_settings(player)
 
   local item_count = player.get_item_count({name = item_name, quality = quality})
-  if item_count > 0 then
+  if item_count > 0 and player.is_shortcut_toggled(SHORTCUT_NAME) then
     player.clear_cursor()
     if player.cursor_stack then
       player.cursor_stack.set_stack({name = item_name, count = item_count})
