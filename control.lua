@@ -122,7 +122,7 @@ local function handle_craft_action(player, multiplier)
   local s         = get_settings(player)
 
   local item_count = player.get_item_count({name = item_name, quality = quality})
-  if item_count > 0 then
+  if item_count > 0 and player.is_shortcut_toggled(SHORTCUT_NAME) then
     player.clear_cursor()
     if player.cursor_stack then
       player.cursor_stack.set_stack({name = item_name, count = item_count})
