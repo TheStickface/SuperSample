@@ -32,10 +32,10 @@ local function build_recipe_cache()
   local cache = {}
 
   -- Only cache recipes the character entity can hand-craft
-  local char_proto = game.entity_prototypes["character"]
+  local char_proto = prototypes.entity["character"]
   local craftable_cats = char_proto and char_proto.crafting_categories or {}
 
-  for name, recipe in pairs(game.recipe_prototypes) do
+  for name, recipe in pairs(prototypes.recipe) do
     if not craftable_cats[recipe.category] then goto continue end
 
     -- Skip recipes with fluid ingredients (cannot hand-craft with fluids)
@@ -89,7 +89,7 @@ local function handle_craft_action(player, multiplier)
 
   local item_count = player.get_item_count({name = item_name, quality = quality})
   if item_count > 0 then
-    player.clean_cursor()
+    player.clear_cursor()
     if player.cursor_stack then
       player.cursor_stack.set_stack({name = item_name, count = item_count})
     end
@@ -104,7 +104,7 @@ local function handle_craft_action(player, multiplier)
 
   local count
   if multiplier == "stack" then
-    local item_proto = game.item_prototypes[item_name]
+    local item_proto = prototypes.item[item_name]
     count = item_proto and item_proto.stack_size or STACK_FALLBACK
   else
     count = s.craft_count * (multiplier or 1)
@@ -113,7 +113,7 @@ local function handle_craft_action(player, multiplier)
   local queued = player.begin_crafting{recipe = recipe_name, count = count}
 
   if queued > 0 then
-    local display_name = game.item_prototypes[item_name].localised_name
+    local display_name = prototypes.item[item_name].localised_name
     player.create_local_flying_text{
       text     = {"ghost-crafter.queued", queued, display_name},
       position = player.position,
