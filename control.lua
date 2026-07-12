@@ -1,3 +1,5 @@
+local SHORTCUT_NAME = "supersample-toggle-pipette"
+
 local function resolve_hovered_target(player)
   local entity = player.selected
   if not entity or not entity.valid then return nil end
@@ -61,12 +63,29 @@ local function build_recipe_cache()
   return cache
 end
 
+local function ensure_pipette_default(player)
+  storage.pipette_initialized = storage.pipette_initialized or {}
+  if storage.pipette_initialized[player.index] then return end
+  player.set_shortcut_toggled(SHORTCUT_NAME, true)
+  storage.pipette_initialized[player.index] = true
+end
+
 script.on_init(function()
   storage.recipe_cache = build_recipe_cache()
+  for _, player in pairs(game.players) do
+    ensure_pipette_default(player)
+  end
 end)
 
 script.on_configuration_changed(function()
   storage.recipe_cache = build_recipe_cache()
+  for _, player in pairs(game.players) do
+    ensure_pipette_default(player)
+  end
+end)
+
+script.on_event(defines.events.on_player_created, function(event)
+  ensure_pipette_default(game.players[event.player_index])
 end)
 
 local function get_settings(player)
