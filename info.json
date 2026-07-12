@@ -1,6 +1,6 @@
 {
   "name": "SuperSample",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "title": "SuperSample",
   "author": "scorps",
   "description": "A keybind that acts as a smart pipette: picks up items you have, or queues a craft for items you don't.",
