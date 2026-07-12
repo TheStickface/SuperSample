@@ -1,19 +1,19 @@
 data:extend({
   {
     type = "custom-input",
-    name = "ghost-crafter-craft",
+    name = "supersample-craft",
     key_sequence = "CAPSLOCK",
     consuming = "none",
   },
   {
     type = "custom-input",
-    name = "ghost-crafter-craft-shift",
+    name = "supersample-craft-shift",
     key_sequence = "CONTROL + CAPSLOCK",
     consuming = "none",
   },
   {
     type = "custom-input",
-    name = "ghost-crafter-craft-ctrl",
+    name = "supersample-craft-ctrl",
     key_sequence = "SHIFT + CAPSLOCK",
     consuming = "none",
   },

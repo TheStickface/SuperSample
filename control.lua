@@ -71,7 +71,7 @@ end)
 
 local function get_settings(player)
   return {
-    craft_count = settings.get_player_settings(player)["ghost-crafter-craft-count"].value,
+    craft_count = settings.get_player_settings(player)["supersample-craft-count"].value,
   }
 end
 
@@ -115,7 +115,7 @@ local function handle_craft_action(player, multiplier)
   if queued > 0 then
     local display_name = prototypes.item[item_name].localised_name
     player.create_local_flying_text{
-      text     = {"ghost-crafter.queued", queued, display_name},
+      text     = {"supersample.queued", queued, display_name},
       position = player.position,
     }
     if not target.is_tile then
@@ -123,20 +123,20 @@ local function handle_craft_action(player, multiplier)
     end
   else
     player.create_local_flying_text{
-      text     = {"ghost-crafter.missing-materials"},
+      text     = {"supersample.missing-materials"},
       position = player.position,
     }
   end
 end
 
-script.on_event("ghost-crafter-craft", function(event)
+script.on_event("supersample-craft", function(event)
   handle_craft_action(game.players[event.player_index], 1)
 end)
 
-script.on_event("ghost-crafter-craft-shift", function(event)
+script.on_event("supersample-craft-shift", function(event)
   handle_craft_action(game.players[event.player_index], 5)
 end)
 
-script.on_event("ghost-crafter-craft-ctrl", function(event)
+script.on_event("supersample-craft-ctrl", function(event)
   handle_craft_action(game.players[event.player_index], "stack")
 end)

@@ -49,7 +49,7 @@ $endIdx   = [Math]::Min($lines.Count - 1, $lastIdx + 60)
 Write-Output "--- Error Block (line $($lastIdx + 1) of $($lines.Count) tail) ---"
 for ($i = $startIdx; $i -le $endIdx; $i++) {
     $line = $lines[$i]
-    if ($line -match 'GhostCrafter') {
+    if ($line -match 'SuperSample') {
         Write-Output "> MOD: $line"
     } elseif ($line -match '^\s*[\d\.]+\s+Error') {
         Write-Output "> ERR: $line"
