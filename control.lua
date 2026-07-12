@@ -130,7 +130,10 @@ local function handle_craft_action(player, multiplier)
   if item_count > 0 and player.is_shortcut_toggled(SHORTCUT_NAME) then
     player.clear_cursor()
     if player.cursor_stack then
-      player.cursor_stack.set_stack({name = item_name, count = item_count})
+      local removed = player.remove_item({name = item_name, quality = quality, count = item_count})
+      if removed > 0 then
+        player.cursor_stack.set_stack({name = item_name, quality = quality, count = removed})
+      end
     end
     return
   end
