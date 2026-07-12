@@ -97,6 +97,12 @@ script.on_event(defines.events.on_player_removed, function(event)
   end
 end)
 
+script.on_event(defines.events.on_lua_shortcut, function(event)
+  if event.prototype_name ~= SHORTCUT_NAME then return end
+  local player = game.players[event.player_index]
+  player.set_shortcut_toggled(SHORTCUT_NAME, not player.is_shortcut_toggled(SHORTCUT_NAME))
+end)
+
 local function get_settings(player)
   return {
     craft_count = settings.get_player_settings(player)["supersample-craft-count"].value,
