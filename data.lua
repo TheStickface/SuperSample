@@ -17,4 +17,19 @@ data:extend({
     key_sequence = "SHIFT + CAPSLOCK",
     consuming = "none",
   },
+  {
+    type = "custom-input",
+    name = "supersample-toggle-pipette",
+    key_sequence = "ALT + CAPSLOCK",
+    consuming = "none",
+  },
+  {
+    type = "shortcut",
+    name = "supersample-toggle-pipette",
+    action = "lua",
+    toggleable = true,
+    icon = "__base__/graphics/icons/burner-inserter.png",
+    icon_size = 64,
+    associated_control_input = "supersample-toggle-pipette",
+  },
 })
