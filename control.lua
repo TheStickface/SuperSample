@@ -85,7 +85,16 @@ script.on_configuration_changed(function()
 end)
 
 script.on_event(defines.events.on_player_created, function(event)
-  ensure_pipette_default(game.players[event.player_index])
+  local player = game.players[event.player_index]
+  player.set_shortcut_toggled(SHORTCUT_NAME, true)
+  storage.pipette_initialized = storage.pipette_initialized or {}
+  storage.pipette_initialized[player.index] = true
+end)
+
+script.on_event(defines.events.on_player_removed, function(event)
+  if storage.pipette_initialized then
+    storage.pipette_initialized[event.player_index] = nil
+  end
 end)
 
 local function get_settings(player)
